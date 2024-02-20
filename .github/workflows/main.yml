@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
 
       - name: Set up Go environment
         uses: actions/setup-go@v2
@@ -28,7 +30,9 @@ jobs:
       - name: Detect modified functions
         run: |
           git fetch origin main
+          git diff --name-only origin/main HEAD | grep '^lambdas/'
           changed_dirs=$(git diff --name-only origin/main HEAD | grep '^lambdas/' | awk -F'/' '{print $2}' | uniq)
+          echo "changed_dirs=$changed_dirs"
           echo "changed_dirs=$changed_dirs" >> $GITHUB_ENV
 
       - name: Build and Zip Files
