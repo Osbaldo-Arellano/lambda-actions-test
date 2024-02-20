@@ -12,7 +12,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	sourceIP := request.RequestContext.Identity.SourceIP
 
 	if sourceIP == "" {
-		fmt.Println("this is new from the transaction lambda")
+		fmt.Println("this is new from the transaction lambda@@@")
 		greeting = "Hello, world!\n"
 	} else {
 		greeting = fmt.Sprintf("Hello, %s!\n", sourceIP)
