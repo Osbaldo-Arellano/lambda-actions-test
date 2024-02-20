@@ -27,29 +27,11 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-west-1
 
-      - name: Download updated Lambda list artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: artifact-PR${{ github.event.pull_request.number }}
-
-      - name: Read updated Lambda list
+      - name: Get PR Number
+        id: get-pr
         run: |
-          artifact-PR${{ github.event.pull_request.number }}
-          readarray -t lambda_functions < artifact-PR${{ github.event.pull_request.number }}
-
-      - name: Build and Zip Files
-        run: |
-          for lambda in "${lambda_functions[@]}"
-          do
-            echo "Building and zipping $lambda"
-            GOOS=linux GOARCH=amd64 go build -o ./lambdas/$lambda_dir/bootstrap ./lambdas/$lambda_dir
-            zip -j ./lambdas/$lambda_dir/$lambda_dir.zip ./lambdas/$lambda_dir/bootstrap
-          done
-
-      - name: Deploy Lambda function(s)
-        run: |
-          for lambda in "${lambda_functions[@]}"
-          do
-            echo "Deploying $lambda_dir"
-            aws lambda update-function-code --function-name $lambda_dir --zip-file fileb://lambdas/$lambda_dir/$lambda_dir.zip
-          done
+          PR_NUMBER=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/pulls?state=closed" \
+            | jq --arg SHA "$GITHUB_SHA" '.[] | select(.merge_commit_sha == $SHA) | .number')
+          echo "PR Number: $PR_NUMBER"
+          echo "::set-output name=pr_number::$PR_NUMBER"
