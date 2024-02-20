@@ -30,9 +30,7 @@ jobs:
       - name: Detect modified functions
         run: |
           git fetch origin main
-          git diff --name-only origin/main HEAD | grep '^lambdas/'
           changed_dirs=$(git diff --name-only origin/main HEAD | grep '^lambdas/' | awk -F'/' '{print $2}' | uniq)
-          echo "changed_dirs=$changed_dirs"
           echo "changed_dirs=$changed_dirs" >> $GITHUB_ENV
 
       - name: Build and Zip Files
