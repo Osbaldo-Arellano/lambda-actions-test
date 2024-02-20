@@ -1,4 +1,4 @@
-name: Build and Upload Artifact
+name: Generate Lambda List File
 
 on:
   pull_request:
@@ -6,31 +6,27 @@ on:
       - main
 
 jobs:
-  build:
+  generate-lambda-list:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v2
-
-      # Add steps for your build process here
-      # - name: Build Project
-      #   run: ...
+        with:
+          fetch-depth: 0
 
       - name: Create Artifact Name
         id: artifact-name
         run: echo "ARTIFACT_NAME=artifact-PR${{ github.event.pull_request.number }}" >> $GITHUB_ENV
 
-      - name: Build Artifact
+      - name: Detect and list modified functions
         run: |
-          # Replace this with your build commands
-          # For example, zip your project files
-          mkdir artifact
-          echo "Sample artifact for PR ${{ github.event.pull_request.number }}" > artifact/info.txt
-          zip -r ${{ env.ARTIFACT_NAME }}.zip artifact/
+          git fetch origin main
+          changed_dirs=$(git diff --name-only origin/main HEAD | grep '^lambdas/' | awk -F'/' '{print $2}' | uniq)
+          echo "$changed_dirs" > modified-lambdas.txt
+          cat modified-lambdas.txt
 
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v2
+      - name: Upload lambda list as an artifact
+        uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.ARTIFACT_NAME }}.zip
+          path: ${{ env.ARTIFACT_NAME }}
