@@ -31,6 +31,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: modified-lambdas
+          path: modified-lambdas.txt
 
       - name: Read updated Lambda list
         run: |
