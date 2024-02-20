@@ -33,7 +33,7 @@ jobs:
 
       - name: Build and Zip Files
         run: |
-          if [ -z ${{env.changed_dirs}} ]; then
+          if [ -z ${changed_dirs} ]; then
             echo "No changed lambda directories detected. Skipping build and zip."
             exit 0
           fi
