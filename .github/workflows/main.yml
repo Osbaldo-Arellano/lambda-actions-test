@@ -20,9 +20,9 @@ jobs:
       - name: Set up AWS CLI
         uses: aws-actions/configure-aws-credentials@v1
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+          aws-access-key-id: ${secrets.AWS_ACCESS_KEY_ID}
+          aws-secret-access-key: ${secrets.AWS_SECRET_ACCESS_KEY}
+          aws-session-token: ${secrets.AWS_SESSION_TOKEN}
           aws-region: us-west-1
 
       - name: Detect modified functions
@@ -33,12 +33,12 @@ jobs:
 
       - name: Build and Zip Files
         run: |
-          if [ -z${{ steps.detect-modified.outputs.changed_dirs }}" ]; then
+          if [ -z${ steps.detect-modified.outputs.changed_dirs }" ]; then
             echo "No changed lambda directories detected. Skipping build and zip."
             exit 0
           fi
 
-          for lambda_dir in ${{ steps.detect-modified.outputs.changed_dirs }}
+          for lambda_dir in ${steps.detect-modified.outputs.changed_dirs}
           do
             echo "Building and zipping $lambda_dir"
             GOOS=linux GOARCH=amd64 go build -o ./lambdas/$lambda_dir/bootstrap ./lambdas/$lambda_dir
@@ -48,7 +48,7 @@ jobs:
       - name: Deploy Lambda function(s)
         if: steps.detect-modified.outputs.changed_dirs != ''
         run: |
-          for lambda_dir in ${{ steps.detect-modified.outputs.changed_dirs }}
+          for lambda_dir in ${steps.detect-modified.outputs.changed_dirs}
           do
             echo "Deploying $lambda_dir"
             aws lambda update-function-code --function-name $lambda_dir --zip-file fileb://lambdas/$lambda_dir/$lambda_dir.zip
