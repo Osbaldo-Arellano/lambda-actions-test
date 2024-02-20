@@ -27,7 +27,8 @@ jobs:
 
       - name: Detect modified or new Lambda functions
         run: |
-          changed_dirs=$(git diff --name-only HEAD^ HEAD | grep '^lambdas/' | awk -F'/' '{print $2}' | uniq)
+          git fetch origin main
+          changed_dirs=$(git diff --name-only origin/main HEAD | grep '^lambdas/' | awk -F'/' '{print $2}' | uniq)
           echo "changed_dirs=${changed_dirs}" >> $GITHUB_ENV
 
       - name: Build and Zip Files
