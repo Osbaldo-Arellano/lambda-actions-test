@@ -29,26 +29,26 @@ jobs:
         run: |
           git fetch origin main
           changed_dirs=$(git diff --name-only origin/main HEAD | grep '^lambdas/' | awk -F'/' '{print $2}' | uniq)
-          echo "changed_dirs=$changed_dirs" >> $GITHUB_ENV
+          echo "changed_dirs=$changed_dirs" >> $GITHUB_OUTPUT
 
       - name: Build and Zip Files
         run: |
-          if [ -z ${{env.changed_dirs}} ]; then
+          if [ -z${{ steps.detect-modified.outputs.changed_dirs }}" ]; then
             echo "No changed lambda directories detected. Skipping build and zip."
             exit 0
           fi
 
-          for lambda_dir in ${{env.changed_dirs}}
+          for lambda_dir in ${{ steps.detect-modified.outputs.changed_dirs }}
           do
             echo "Building and zipping $lambda_dir"
             GOOS=linux GOARCH=amd64 go build -o ./lambdas/$lambda_dir/bootstrap ./lambdas/$lambda_dir
             zip -j ./lambdas/$lambda_dir/$lambda_dir.zip ./lambdas/$lambda_dir/bootstrap
           done
 
-      - name: Deploy changed or new Lambda functions
-        if: env.changed_dirs != ''
+      - name: Deploy Lambda function(s)
+        if: steps.detect-modified.outputs.changed_dirs != ''
         run: |
-          for lambda_dir in ${{ env.changed_dirs }}
+          for lambda_dir in ${{ steps.detect-modified.outputs.changed_dirs }}
           do
             echo "Deploying $lambda_dir"
             aws lambda update-function-code --function-name $lambda_dir --zip-file fileb://lambdas/$lambda_dir/$lambda_dir.zip
