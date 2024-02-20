@@ -1,0 +1,28 @@
+name: Generate Lambda List File
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  generate-lambda-list:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Detect and list modified functions
+        run: |
+          git fetch origin main
+          changed_dirs=$(git diff --name-only origin/main HEAD | grep '^lambdas/' | awk -F'/' '{print $2}' | uniq)
+          echo "$changed_dirs" > modified-lambdas.txt
+          cat modified-lambdas.txt
+
+      - name: Upload modified lambda list as artifact
+        uses: actions/upload-artifact@v2
+        with:
+          name: modified-lambdas
+          path: modified-lambdas.txt

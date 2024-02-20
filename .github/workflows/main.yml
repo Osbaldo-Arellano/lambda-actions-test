@@ -1,7 +1,7 @@
 name: Deploy Lambda Functions
 
 on:
-  pull_request:
+  push:
     branches:
       - main
 
@@ -27,29 +27,30 @@ jobs:
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: us-west-1
 
-      - name: Detect modified functions
+      - name: Download updated Lambda list artifact
+        uses: actions/download-artifact@v2
+        with:
+          name: modified-lambdas
+          path: .
+
+      - name: Read updated Lambda list
         run: |
-          git fetch origin main
-          changed_dirs=$(git diff --name-only origin/main HEAD | grep '^lambdas/' | awk -F'/' '{print $2}' | uniq | tr '\n' ' ')
-          echo "changed_dirs=$changed_dirs" >> $GITHUB_ENV
+          cat modified-lambdas.txt
+          readarray -t lambda_functions < modified-lambdas.txt
 
       - name: Build and Zip Files
         run: |
-          if [ -z ${{ env.changed_dirs}} ]; then
-            echo "No changed lambda directories detected. Skipping build and zip."
-            exit 0
-          fi
-
-          for lambda_dir in ${{ env.changed_dirs}}
-            echo "Building and zipping $lambda_dir"
+          for lambda in "${lambda_functions[@]}"
+          do
+            echo "Building and zipping $lambda"
             GOOS=linux GOARCH=amd64 go build -o ./lambdas/$lambda_dir/bootstrap ./lambdas/$lambda_dir
             zip -j ./lambdas/$lambda_dir/$lambda_dir.zip ./lambdas/$lambda_dir/bootstrap
           done
 
       - name: Deploy Lambda function(s)
-        if: ${{ env.changed_dirs}} != ''
         run: |
-          for lambda_dir in ${{ env.changed_dirs}}
+          for lambda in "${lambda_functions[@]}"
+          do
             echo "Deploying $lambda_dir"
             aws lambda update-function-code --function-name $lambda_dir --zip-file fileb://lambdas/$lambda_dir/$lambda_dir.zip
           done
