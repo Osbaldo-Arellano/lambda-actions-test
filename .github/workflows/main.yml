@@ -26,14 +26,13 @@ jobs:
           aws-region: us-west-1
 
       - name: Detect modified or new Lambda functions
-        id: detect_changes
         run: |
           changed_dirs=$(git diff --name-only HEAD^ HEAD | grep '^lambdas/' | awk -F'/' '{print $2}' | uniq)
-          echo "::set-output name=changed_lambdas::${changed_dirs}"
+          echo "changed_dirs=${changed_dirs}" >> $GITHUB_ENV
 
       - name: Build and Zip Files
         run: |
-          for lambda_dir in $changed_dirs
+          for lambda_dir in ${{ env.changed_dirs }}
           do
             echo "Building and zipping $lambda_dir"
             GOOS=linux GOARCH=amd64 go build -o ./lambdas/$lambda_dir/bootstrap ./lambdas/$lambda_dir
@@ -41,9 +40,9 @@ jobs:
           done
 
       - name: Deploy changed or new Lambda functions
-        if: steps.detect_changes.outputs.changed_lambdas != ''
+        if: env.changed_dirs != ''
         run: |
-          for lambda_dir in ${{ steps.detect_changes.outputs.changed_lambdas }}
+          for lambda_dir in ${{ env.changed_dirs }}
           do
             echo "Deploying $lambda_dir"
             aws lambda update-function-code --function-name $lambda_dir --zip-file fileb://lambdas/$lambda_dir/$lambda_dir.zip
