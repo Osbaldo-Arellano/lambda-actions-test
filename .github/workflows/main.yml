@@ -35,3 +35,31 @@ jobs:
             | jq --arg SHA "$GITHUB_SHA" '.[] | select(.merge_commit_sha == $SHA) | .number')
           echo "PR Number: $PR_NUMBER"
           echo "::set-output name=pr_number::$PR_NUMBER"
+          echo "ARTIFACT_NAME=artifact-PR${PR_NUMBER}" >> $GITHUB_ENV
+
+      - name: Download updated Lambda list artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.ARTIFACT_NAME }}
+
+      - name: Read updated Lambda list
+        run: |
+          ${{ env.ARTIFACT_NAME }}
+          readarray -t lambda_functions < ${{ env.ARTIFACT_NAME }}
+
+      - name: Build and Zip Files
+        run: |
+          for lambda in "${lambda_functions[@]}"
+          do
+            echo "Building and zipping $lambda"
+            GOOS=linux GOARCH=amd64 go build -o ./lambdas/$lambda_dir/bootstrap ./lambdas/$lambda_dir
+            zip -j ./lambdas/$lambda_dir/$lambda_dir.zip ./lambdas/$lambda_dir/bootstrap
+          done
+
+      - name: Deploy Lambda function(s)
+        run: |
+          for lambda in "${lambda_functions[@]}"
+          do
+            echo "Deploying $lambda_dir"
+            aws lambda update-function-code --function-name $lambda_dir --zip-file fileb://lambdas/$lambda_dir/$lambda_dir.zip
+          done
