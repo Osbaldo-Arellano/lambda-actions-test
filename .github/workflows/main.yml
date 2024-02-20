@@ -1,55 +1,24 @@
-name: Deploy Lambda Functions
+name: Get PR Number on PUSH event
 
-on:
-  push:
-    branches:
-      - main
+on: [push, pull_request]
 
 jobs:
-  deploy:
+  push:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'push' }}
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+      - uses: actions/checkout@v2.3.4
         with:
           fetch-depth: 0
+      - name: Get Pull Request Number
+        id: pr
+        run: echo "pull_request_number=$(gh pr view --json number -q .number || echo "")" >> $GITHUB_OUTPUT
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - run: echo ${{ steps.pr.outputs.pull_request_number }}
 
-      - name: Set up Go environment
-        uses: actions/setup-go@v2
-        with:
-          go-version: "1.x"
-
-      - name: Set up AWS CLI
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-west-1
-
-      - name: Download updated Lambda list artifact
-        uses: actions/download-artifact@v4
-        with:
-          name: artifact-PR${{ github.event.pull_request.number }}
-
-      - name: Read updated Lambda list
-        run: |
-          artifact-PR${{ github.event.pull_request.number }}
-          readarray -t lambda_functions < artifact-PR${{ github.event.pull_request.number }}
-
-      - name: Build and Zip Files
-        run: |
-          for lambda in "${lambda_functions[@]}"
-          do
-            echo "Building and zipping $lambda"
-            GOOS=linux GOARCH=amd64 go build -o ./lambdas/$lambda_dir/bootstrap ./lambdas/$lambda_dir
-            zip -j ./lambdas/$lambda_dir/$lambda_dir.zip ./lambdas/$lambda_dir/bootstrap
-          done
-
-      - name: Deploy Lambda function(s)
-        run: |
-          for lambda in "${lambda_functions[@]}"
-          do
-            echo "Deploying $lambda_dir"
-            aws lambda update-function-code --function-name $lambda_dir --zip-file fileb://lambdas/$lambda_dir/$lambda_dir.zip
-          done
+  pull-request:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' }}
+    steps:
+      - run: echo ${{ github.event.number }}
