@@ -22,11 +22,11 @@ jobs:
         run: |
           git fetch origin main
           changed_dirs=$(git diff --name-only origin/main HEAD | grep '^lambdas/' | awk -F'/' '{print $2}' | uniq)
-          echo "$changed_dirs" > modified-lambdas.txt
+          echo "$changed_dirs" > ${{ env.ARTIFACT_NAME }}.txt
           cat modified-lambdas.txt
 
       - name: Upload lambda list as an artifact
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.ARTIFACT_NAME }}
-          path: ${{ env.ARTIFACT_NAME }}
+          path: ${{ env.ARTIFACT_NAME }}.txt
