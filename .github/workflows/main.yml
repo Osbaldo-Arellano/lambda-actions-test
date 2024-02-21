@@ -39,11 +39,15 @@ jobs:
 
       - name: Download from S3
         run: |
-          aws s3 cp s3://lambda-change-tracker/${{ env.ARTIFACT_NAME }}.txt .
+          aws s3 cp s3://lambda-change-tracker/${{ env.ARTIFACT_NAME }}.txt ./
 
       - name: Read updated Lambda list
         run: |
-          readarray -t lambda_functions < ${{ env.ARTIFACT_NAME }}.txt
+          readarray -t lambda_functions < ./${{ env.ARTIFACT_NAME }}.txt
+          for lambda in "${lambda_functions[@]}"
+          do
+            echo "$lambda"
+          done
 
       - name: Build and Zip Files
         run: |
