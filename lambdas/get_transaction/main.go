@@ -12,7 +12,7 @@ func handler(request events.APIGatewayProxyRequest) (events.APIGatewayProxyRespo
 	sourceIP := request.RequestContext.Identity.SourceIP
 
 	if sourceIP == "" {
-		fmt.Println("thaaaadasaissssdsdsa is ssne2w frssom the tssrsccanasaadfsdsasssdassdsdsdasdasdsaction lamasdasdasdbdasdasda@@asdas@!!")
+		fmt.Println("thaaaadasaissssdsdsa is ssne2w frssom the tssrsccanasaadfsdsasssdassdSSSSsdasdbdasdasda@@asdas@!!")
 		greeting = "Hello, world!\n"
 	} else {
 		greeting = fmt.Sprintf("Hello, %s!\n", sourceIP)
