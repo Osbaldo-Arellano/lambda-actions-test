@@ -40,7 +40,7 @@ jobs:
       - name: Download updated Lambda list artifact
         uses: actions/download-artifact@v4
         with:
-          name: ${{ env.ARTIFACT_NAME }}
+          name: ${{ env.ARTIFACT_NAME }}.zip
 
       - name: Read updated Lambda list
         run: |
