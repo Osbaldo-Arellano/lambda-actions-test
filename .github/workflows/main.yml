@@ -43,7 +43,6 @@ jobs:
 
       - name: Read updated Lambda list
         run: |
-          ${{ env.ARTIFACT_NAME }}
           readarray -t lambda_functions < ${{ env.ARTIFACT_NAME }}.txt
 
       - name: Build and Zip Files
