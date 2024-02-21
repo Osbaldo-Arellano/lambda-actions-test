@@ -56,7 +56,6 @@ jobs:
           do
             echo "Building and zipping $lambda"
             cd /home/runner/work/lambda-actions-test/lambda-actions-test/lambdas/$lambda
-            go mod init
             GOOS=linux GOARCH=amd64 go build -o bootstrap
             zip $lambda.zip bootstrap
             cd -
